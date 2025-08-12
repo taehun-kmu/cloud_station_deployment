@@ -1,18 +1,21 @@
 #!/bin/bash
+set -e
+
+
 rm -r ENV
 
 rm -rf cloud_station_deployment 
 
 rm -rf cloud_station_web
 
-#sudo reboot
+sudo docker container rm -f redis
 
-git clone https://github.com/CloudStationTeam/cloud_station_deployment.git
+git clone -b devel https://github.com/taehun-kmu/cloud_station_deployment.git
 sleep 3
 
 # Update requirements.txt.
 # Edit setup_server.sh if your cloud_station_web repo is a different one.
-bash ~/cloud_station_deployment/setup_server.sh --tag=v3.0 
+bash ~/cloud_station_deployment/setup_server.sh
 
 # Refer to 
 # https://cloud-station-docs.readthedocs.io/en/latest/deployment.html#step-by-step-deployment-guide 
@@ -21,9 +24,9 @@ bash ~/cloud_station_deployment/setup_server.sh --tag=v3.0
 #ps aux | grep nginx | grep -v grep #find nginx user
 #sudo nginx -T | grep "cache" #check for cache files
 
-sudo usermod -a -G ubuntu www-data #add nginx user to the ubuntu group 
+sudo usermod -a -G $USER www-data #add nginx user to the ubuntu group 
 # optional 
-sudo chgrp -R ubuntu * #change file owners to ubuntu group 
+sudo chgrp -R $USER * #change file owners to ubuntu group 
 sudo chmod -R g+r * #change file permissions of file owners 
 
 bash ~/cloud_station_deployment/configure_web_server.sh 

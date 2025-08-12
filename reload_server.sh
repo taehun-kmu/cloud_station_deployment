@@ -1,7 +1,11 @@
 #!/bin/bash
+set -e
+
+
 echo "Updating src code"
 cd ~/cloud_station_web
 git pull
+
 echo "Django migration"
 source ~/ENV/bin/activate
 python3 ~/cloud_station_web/manage.py makemigrations

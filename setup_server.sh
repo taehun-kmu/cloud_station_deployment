@@ -1,4 +1,6 @@
 #!/bin/bash 
+set -e
+
 
 # Define function first
 
@@ -73,54 +75,29 @@ echo "API key: $api_key"
 start_time="$(date -u +%s)"
 
 
-echo "######### Setting up server #########"
-echo "For Amazon Web Services (AWS) Amazon Machine Image (AMI) Linux Ubuntu Server 22.04 LTS (HVM)"
+echo -e "\n\n######### Setting up server #########"
+echo -e "\nFor Amazon Web Services Linux Ubuntu Server 22.04 LTS"
 
-echo "1. Updating Ubuntu"
+
+echo -e "\n\n1. Updating Ubuntu"
 # Update package database
 sudo apt-get update -y
-
-# Configure needrestart to automatically restart services
-sudo sed -i 's/^#\$nrconf{restart}.*$/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf
 
 # Upgrade packages
 sudo apt-get upgrade -y
 
-# Install EMACS, Professor Burke's favorite text editor
-sudo apt-get install emacs -y
-sudo apt-get install emacs -y
 
-echo "2. Installing NGINX and docker"
+echo -e "\n\n2. Installing NGINX and docker"
 echo "Installing NGINX"
 sudo apt-get --yes install nginx
-echo "Configuring nginx.conf"
+echo -e "\nConfiguring nginx.conf"
 #curl http://checkip.amazonaws.com # our public IP address
-sed -i "s/www\.example\.com/$(curl -s http://checkip.amazonaws.com)/g" ~/cloud_station_deployment/nginx.conf
-sudo usermod -a -G ubuntu www-data
+sed -i "s/www\.example\.com/$(hostname -I | awk '{print $2}')/g" ~/cloud_station_deployment/nginx.conf
+sudo usermod -a -G $USER www-data
 
-echo "Removing any old Docker installations"
-sudo apt-get --yes remove docker docker-engine docker.io containerd runc
-
-# use https://stackoverflow.com/questions/71393595/installing-docker-in-ubuntu-from-repo-cant-find-a-repo
-sudo apt-get update
-     
-echo "Installing dependencies for Docker installation"
-sudo apt-get --yes install apt-transport-https ca-certificates curl gnupg lsb-release
-
-echo "Adding Docker's official GPG key"
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-echo "Setting up the Docker stable repository"
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-
-echo "Installing Docker CE, Docker CE CLI, and containerd.io"
-sudo apt --yes install docker.io
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-#bash ./docker.sh Legacy from v 3.0. But file docker.sh not here yet, why run it now?
 
 # Temporary clone the dev branch
-echo "3. Cloning CloudStation web app source code"
+echo -e "\n\n3. Cloning CloudStation web app source code"
 #git clone https://github.com/CloudStationTeam/cloud_station_web.git
 git clone https://github.com/CloudStationTeam/cloud_station_web.git --branch dev --single-branch
 
@@ -142,7 +119,8 @@ git clone https://github.com/CloudStationTeam/cloud_station_web.git --branch dev
 #    esac
 #done
 
-echo "4. Setting up Python virtual environment"
+
+echo -e "\n\n4. Setting up Python virtual environment"
 sudo apt-get --yes install python3-venv
 mkdir ~/ENV
 python3 -m venv ~/ENV # Creates python virtual environment.
@@ -159,13 +137,14 @@ pip3 install -r ~/cloud_station_web/requirements.txt --no-cache-dir
 #echo "getting mapbox key"
 #inputMapBoxkeyandInsertintosettings
 
-echo "Editing settings.py to put Mapbox key in that you entered above."
+echo -e "\nEditing settings.py to put Mapbox key in that you entered above."
 sed -i "s/=\"\"/=\"$api_key\"/g" ~/cloud_station_web/webgms/settings.py
 
-echo "Changing server IP to ALLOWED_HOSTS to everything in cloud_station_web/webgms/settings.py"
+echo -e "\nChanging server IP to ALLOWED_HOSTS to everything in cloud_station_web/webgms/settings.py"
 #sed -i 's/\[\]/\[\*\]/g' ~/cloud_station_web/webgms/settings.py
 sed -i "s/\[\]/['*']/g" ~/cloud_station_web/webgms/settings.py
-echo "Turning off debug mode in cloud_station_web/webgms/settings.py"
+
+echo -e "\nTurning off debug mode in cloud_station_web/webgms/settings.py"
 sed -i 's/DEBUG = True/DEBUG = False/g' ~/cloud_station_web/webgms/settings.py
 
 # echo "getting google maps key"
@@ -182,23 +161,23 @@ echo "$command_to_add" >> ~/.bashrc
 # Reload the bashrc
 source ~/.bashrc
 
-echo "Command added to the last line of ~/.bashrc and bashrc reloaded."
+echo -e "\n\nCommand added to the last line of ~/.bashrc and bashrc reloaded."
 
 
-echo "Finished setting up server!"
+echo -e "\n\nFinished setting up server!"
 echo "now running bash ~/cloud_station_deployment/configure_web_server.sh "
 bash ~/cloud_station_deployment/configure_web_server.sh
 
-echo "Finished running configure_web_server server!"
+echo -e "\nFinished running configure_web_server server!"
 end_time="$(date -u +%s)"
 
 elapsed="$(($end_time-$start_time))"
-echo "Total of $elapsed seconds elapsed for the entire process"
+echo -e "\nTotal of $elapsed seconds elapsed for the entire process"
 
 
 minutes=$((elapsed / 60))
 seconds=$((elapsed % 60))
-echo "Ellapsed time ${minutes} minutes ${seconds} seconds"
+echo -e "\nEllapsed time ${minutes} minutes ${seconds} seconds"
 
 
 
